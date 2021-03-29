@@ -1,16 +1,12 @@
+using HotelApi.Configurations;
+using HotelApi.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HotelApi
 {
@@ -26,19 +22,26 @@ namespace HotelApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<DatabaseContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("sqlConnection"))
+                );
 
-            services.AddControllers();
             services.AddCors(o =>
             {
-                o.AddPolicy("CorsPolicy", builder =>
+                o.AddPolicy("AllowAll", builder =>
                     builder.AllowAnyOrigin()
                         .AllowAnyMethod()
                         .AllowAnyHeader());
             });
+
+            services.AddAutoMapper(typeof(MapperInitilizer));
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelApi", Version = "v1" });
             });
+            services.AddControllers();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,7 +56,7 @@ namespace HotelApi
 
             app.UseHttpsRedirection();
 
-            app.UseCors("CorsPolicy");
+            app.UseCors("AllowAll");
 
             app.UseRouting();
 
